@@ -130,6 +130,44 @@ public final class AVDManager {
         try applyConfiguration(configuration)
     }
 
+    public func switchSystemImage(
+        name: String,
+        package: String,
+        device: String = DeviceProfile.appleSiliconDefault.deviceIdentifier
+    ) throws -> URL {
+        let directory = avdDirectory(named: name)
+        let ini = avdINI(named: name)
+        let existingConfiguration = configuration(for: name)
+        let backup = try backupExistingAVD(named: name)
+
+        do {
+            try createAVD(name: name, package: package, device: device, force: true)
+            let configuration = InstanceConfiguration(
+                avdName: existingConfiguration?.avdName ?? name,
+                deviceName: existingConfiguration?.deviceName ?? name,
+                deviceSpec: existingConfiguration?.deviceSpec ?? DeviceCatalog.defaultSpec,
+                identity: existingConfiguration?.identity ?? VirtualIdentityGenerator.makeIdentity(),
+                display: existingConfiguration?.display ?? .defaultPreset,
+                runtimeProfile: existingConfiguration?.runtimeProfile ?? .game,
+                diskSizeMB: existingConfiguration?.diskSizeMB ?? RuntimeProfile.game.diskSizeMB,
+                rootEnabled: existingConfiguration?.rootEnabled ?? false,
+                adbEnabled: existingConfiguration?.adbEnabled ?? true,
+                systemImagePackage: package,
+                systemSettings: existingConfiguration?.resolvedSystemSettings ?? .default,
+                orientationRules: existingConfiguration?.resolvedOrientationRules
+            )
+            try applyConfiguration(configuration)
+            return backup
+        } catch {
+            if FileManager.default.fileExists(atPath: backup.path) {
+                try? FileManager.default.removeItem(at: directory)
+                try? FileManager.default.removeItem(at: ini)
+                try? restoreBackup(backup, name: name)
+            }
+            throw error
+        }
+    }
+
     public func optimizeAVD(name: String, profile: RuntimeProfile) throws {
         let configURL = avdDirectory(named: name).appendingPathComponent("config.ini")
         guard FileManager.default.fileExists(atPath: configURL.path) else {
@@ -190,6 +228,34 @@ public final class AVDManager {
         return backupDirectory
     }
 
+    private func backupExistingAVD(named name: String) throws -> URL {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyyMMdd-HHmmss"
+        let backupDirectory = sdk.avdHome.appendingPathComponent("\(name)-system-backup-\(formatter.string(from: Date()))")
+        try FileManager.default.createDirectory(at: backupDirectory, withIntermediateDirectories: true)
+
+        let directory = avdDirectory(named: name)
+        let ini = avdINI(named: name)
+        if FileManager.default.fileExists(atPath: directory.path) {
+            try FileManager.default.moveItem(at: directory, to: backupDirectory.appendingPathComponent("\(name).avd"))
+        }
+        if FileManager.default.fileExists(atPath: ini.path) {
+            try FileManager.default.moveItem(at: ini, to: backupDirectory.appendingPathComponent("\(name).ini"))
+        }
+        return backupDirectory
+    }
+
+    private func restoreBackup(_ backupDirectory: URL, name: String) throws {
+        let directoryBackup = backupDirectory.appendingPathComponent("\(name).avd")
+        let iniBackup = backupDirectory.appendingPathComponent("\(name).ini")
+        if FileManager.default.fileExists(atPath: directoryBackup.path) {
+            try FileManager.default.moveItem(at: directoryBackup, to: avdDirectory(named: name))
+        }
+        if FileManager.default.fileExists(atPath: iniBackup.path) {
+            try FileManager.default.moveItem(at: iniBackup, to: avdINI(named: name))
+        }
+    }
+
     public func copyAVD(
         sourceName: String,
         destinationName: String,
@@ -233,6 +299,7 @@ public final class AVDManager {
             diskSizeMB: diskSizeMB ?? sourceConfig?.diskSizeMB,
             rootEnabled: rootEnabled ?? sourceConfig?.rootEnabled ?? false,
             adbEnabled: adbEnabled ?? sourceConfig?.adbEnabled ?? true,
+            systemImagePackage: sourceConfig?.resolvedSystemImagePackage ?? DeviceProfile.appleSiliconDefaultImage,
             systemSettings: sourceConfig?.resolvedSystemSettings ?? .default,
             orientationRules: sourceConfig?.resolvedOrientationRules
         )

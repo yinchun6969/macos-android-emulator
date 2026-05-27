@@ -134,7 +134,6 @@ public struct LaunchOptions: Sendable, Hashable {
             cameraFront: "none",
             readOnly: readOnly,
             port: port,
-            partitionSizeMB: configuration.diskSizeMB,
             dpi: configuration.display.dpi,
             vsyncRate: configuration.display.fps,
             phoneNumber: configuration.identity.phoneNumber,

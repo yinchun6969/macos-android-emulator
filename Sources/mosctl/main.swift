@@ -66,6 +66,8 @@ func run() throws -> Int32 {
         }
         try MOSPlatform.discover().avdManager.deleteAVD(name: name)
         print("Deleted AVD: \(name)")
+    case "switch-image":
+        try switchImage(rest)
     case "boot":
         try boot(rest)
     case "boot-pool":
@@ -191,6 +193,7 @@ func setConfig(_ args: [String]) throws {
         diskSizeMB: try option("--disk", in: args).flatMap(Int.init) ?? current.diskSizeMB,
         rootEnabled: flag("--root", in: args) ? true : flag("--no-root", in: args) ? false : current.rootEnabled,
         adbEnabled: flag("--adb", in: args) ? true : flag("--no-adb", in: args) ? false : current.adbEnabled,
+        systemImagePackage: try option("--package", in: args) ?? current.resolvedSystemImagePackage,
         systemSettings: try systemSettingsIfPresent(in: args) ?? current.resolvedSystemSettings,
         orientationRules: current.resolvedOrientationRules
     )
@@ -251,13 +254,14 @@ func createAVD(_ args: [String]) throws {
         avdName: name,
         deviceName: try option("--display-name", in: args) ?? name,
         deviceSpec: spec,
-        display: display,
-        runtimeProfile: runtimeProfile,
-        diskSizeMB: diskSizeMB,
-        rootEnabled: rootEnabled,
-        adbEnabled: adbEnabled,
-        systemSettings: systemSettings
-    )
+            display: display,
+            runtimeProfile: runtimeProfile,
+            diskSizeMB: diskSizeMB,
+            rootEnabled: rootEnabled,
+            adbEnabled: adbEnabled,
+            systemImagePackage: package,
+            systemSettings: systemSettings
+        )
 
     let platform = try MOSPlatform.discover()
     try platform.avdManager.createAVD(
@@ -310,6 +314,7 @@ func copyAVD(_ args: [String]) throws {
             diskSizeMB: configuration.diskSizeMB,
             rootEnabled: configuration.rootEnabled,
             adbEnabled: configuration.adbEnabled,
+            systemImagePackage: configuration.resolvedSystemImagePackage,
             systemSettings: systemSettings,
             orientationRules: configuration.resolvedOrientationRules
         )
@@ -388,6 +393,19 @@ func createPool(_ args: [String]) throws {
     for avd in created {
         print(avd.name)
     }
+}
+
+func switchImage(_ args: [String]) throws {
+    let positionals = positionalArguments(args, valueOptions: valueOptions)
+    guard positionals.count >= 2 else {
+        throw MOSError.invalidArgument("Usage: mosctl switch-image <avd-name> <system-image-package> [--device <device-id>]")
+    }
+
+    let platform = try MOSPlatform.discover()
+    let device = try option("--device", in: args) ?? DeviceProfile.appleSiliconDefault.deviceIdentifier
+    let backup = try platform.avdManager.switchSystemImage(name: positionals[0], package: positionals[1], device: device)
+    print("Switched \(positionals[0]) to \(positionals[1]).")
+    print("Backup: \(backup.path)")
 }
 
 func optimizeAVD(_ args: [String]) throws {
@@ -873,6 +891,7 @@ func printHelp() {
           mosctl install-image <system-image-package>
           mosctl list
           mosctl create <avd-name> [--brand <brand>] [--model <model>] [--display <WxH@DPI>] [--fps <n>] [--disk <mb>] [--root] [--no-adb] [--force]
+          mosctl switch-image <avd-name> <system-image-package> [--device <device-id>]
           mosctl copy <source-avd> <destination-avd> [--display <WxH@DPI>] [--fps <n>] [--disk <mb>] [--root|--no-root] [--adb|--no-adb] [--force]
           mosctl copy-pool <source-avd> <prefix> <count> [--display <WxH@DPI>] [--disk <mb>] [--root|--no-root] [--adb|--no-adb] [--force]
           mosctl create-pool <prefix> <count> [--profile <profile>] [--display <WxH@DPI>] [--disk <mb>] [--root] [--no-adb] [--force]

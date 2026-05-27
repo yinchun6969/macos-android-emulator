@@ -55,21 +55,37 @@ public final class ADBManager {
         arguments.append(apkPath)
 
         let fileSize = (try? FileManager.default.attributesOfItem(atPath: apkPath)[.size] as? NSNumber)?.int64Value ?? 0
-        let timeout = max(600, TimeInterval(fileSize / (4 * 1024 * 1024)) + 600)
+        // For large APKs (3GB+), use generous timeout: ~1MB/s transfer + 30min buffer
+        let timeout = max(1800, TimeInterval(fileSize / (1024 * 1024)) + 1800)
         let result = try runner.run(adb, arguments: arguments, environment: sdk.toolEnvironment, input: nil, timeout: timeout)
         if result.succeeded {
             return
         }
 
+        // First fallback: retry without streaming
         if streaming {
             let fallbackArguments = arguments.filter { $0 != "--streaming" }
-            _ = try runner
+            let retryResult = try runner
                 .run(adb, arguments: fallbackArguments, environment: sdk.toolEnvironment, input: nil, timeout: timeout)
-                .requireSuccess()
-            return
+            if retryResult.succeeded {
+                return
+            }
         }
 
-        _ = try result.requireSuccess()
+        // Second fallback: try with -t flag (force streamable install) for split APKs
+        if !apkPath.hasSuffix(".apks") {
+            var retryArguments = ["-s", serial, "install", "-t"]
+            if replace { retryArguments.append("-r") }
+            if grantPermissions { retryArguments.append("-g") }
+            retryArguments.append(apkPath)
+            let lastResult = try runner.run(adb, arguments: retryArguments, environment: sdk.toolEnvironment, input: nil, timeout: timeout)
+            if lastResult.succeeded {
+                return
+            }
+            _ = try lastResult.requireSuccess()
+        } else {
+            _ = try result.requireSuccess()
+        }
     }
 
     public func availableDataBytes(serial: String) throws -> Int64 {
@@ -99,23 +115,33 @@ public final class ADBManager {
     }
 
     public func foregroundPackage(serial: String) throws -> String? {
-        let output = try shell(
-            serial: serial,
-            command: "dumpsys window | grep -E 'mCurrentFocus|mFocusedApp' | head -1"
-        )
-        guard let slash = output.firstIndex(of: "/") else {
-            return nil
+        let commands = [
+            "dumpsys window | grep -E 'mCurrentFocus|mFocusedApp' | head -1",
+            "dumpsys activity activities | grep -E 'mResumedActivity|topResumedActivity' | head -1",
+            "dumpsys activity top | grep ACTIVITY | head -1"
+        ]
+
+        for command in commands {
+            let output = try shell(serial: serial, command: command)
+            if let packageName = Self.extractPackageName(fromFocusLine: output) {
+                return packageName
+            }
         }
-        let prefix = output[..<slash]
-        let tokens = prefix.split { $0 == " " || $0 == "{" }
-        return tokens.last.map(String.init)
+        return nil
     }
 
     public func setDisplay(serial: String, width: Int, height: Int, dpi: Int, rotation: Int) throws {
-        _ = try shell(serial: serial, command: "wm size reset")
+        let normalizedRotation = ((rotation % 4) + 4) % 4
+        let landscape = width > height
+
+        _ = try? shell(serial: serial, command: "settings put system accelerometer_rotation 0")
+        _ = try? shell(serial: serial, command: "settings put system user_rotation \(normalizedRotation)")
+        _ = try? shell(serial: serial, command: "settings put secure show_rotation_suggestions 0")
+        _ = try? shell(serial: serial, command: "cmd display set-user-rotation lock \(normalizedRotation)")
+
+        try rotateHardware(serial: serial, landscape: landscape)
+        _ = try shell(serial: serial, command: "wm size \(width)x\(height)")
         _ = try shell(serial: serial, command: "wm density \(dpi)")
-        _ = try shell(serial: serial, command: "settings put system accelerometer_rotation 1")
-        try rotateHardware(serial: serial, landscape: width > height)
     }
 
     public func androidVersion(serial: String) throws -> String {
@@ -167,6 +193,28 @@ public final class ADBManager {
                 timeout: 20
             )
             .requireSuccess()
+    }
+
+    private static func extractPackageName(fromFocusLine output: String) -> String? {
+        let tokens = output.split { character in
+            character == " " ||
+                character == "{" ||
+                character == "}" ||
+                character == "\n" ||
+                character == "\t"
+        }
+
+        for token in tokens {
+            guard let slash = token.firstIndex(of: "/") else {
+                continue
+            }
+            let packageName = token[..<slash]
+                .trimmingCharacters(in: CharacterSet(charactersIn: "[](),"))
+            if packageName.contains(".") {
+                return packageName
+            }
+        }
+        return nil
     }
 
     public func inputTap(serial: String, x: Int, y: Int) throws {

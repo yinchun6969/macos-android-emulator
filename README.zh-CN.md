@@ -16,12 +16,12 @@
 - 每实例虚拟身份：IMEI、IMSI、Android ID、serial、Wi-Fi MAC、手机号。
 - 复制实例时随机生成机型和虚拟身份。
 - 分辨率、DPI、FPS、CPU、内存、磁盘容量、Root、ADB 配置。
-- 性能档位包含 `lean`、`balanced`、`performance`、`game`；`game` 档使用 6 GB 内存、4 核、Host GPU 和 512 MB VM heap。
+- 性能档位包含 `lean`、`balanced`、`performance`、`game`；`game` 档使用 3 GB 内存、2 核、Host GPU 和 384 MB VM heap，对标 LDPlayer/MuMu 级内存占用。禁用不需要的传感器和 GPS 以进一步降低主机内存开销。
 - 安卓系统设置入口：语言、无障碍、电源优化、安卓设置页。
 - 网络修复入口：关闭飞行模式、开启 Wi-Fi/移动数据，并使用 emulator 全速网络参数启动。
 - 自动应用方向规则：例如 `com.u1game.cabalm` 自动横屏，桌面自动竖屏。
 - 点击器和宏脚本：截图录制点击、录制滑动轨迹、等待、保存 JSON 脚本、循环播放、速度倍率。
-- 大 APK 安装：安装前检查真实 `/data` 空间，ADB streaming 失败时自动回退普通安装。
+- 大 APK 安装：对 3 GB+ 超大 APK 使用 30 分钟超时，ADB streaming 失败时自动回退普通安装和 `-t` 标志安装。
 - CLI 工具 `mosctl`，方便自动化和排查。
 
 ## 重要说明

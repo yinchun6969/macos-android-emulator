@@ -190,6 +190,7 @@ public struct InstanceConfiguration: Sendable, Hashable, Codable {
     public let diskSizeMB: Int
     public let rootEnabled: Bool
     public let adbEnabled: Bool
+    public let systemImagePackage: String?
     public let systemSettings: GuestSystemSettings?
     public let orientationRules: [AppOrientationRule]?
 
@@ -203,6 +204,7 @@ public struct InstanceConfiguration: Sendable, Hashable, Codable {
         diskSizeMB: Int,
         rootEnabled: Bool,
         adbEnabled: Bool,
+        systemImagePackage: String? = DeviceProfile.appleSiliconDefaultImage,
         systemSettings: GuestSystemSettings? = .default,
         orientationRules: [AppOrientationRule]? = nil
     ) {
@@ -215,6 +217,7 @@ public struct InstanceConfiguration: Sendable, Hashable, Codable {
         self.diskSizeMB = diskSizeMB
         self.rootEnabled = rootEnabled
         self.adbEnabled = adbEnabled
+        self.systemImagePackage = systemImagePackage
         self.systemSettings = systemSettings
         self.orientationRules = orientationRules
     }
@@ -228,6 +231,7 @@ public struct InstanceConfiguration: Sendable, Hashable, Codable {
         diskSizeMB: Int? = nil,
         rootEnabled: Bool = false,
         adbEnabled: Bool = true,
+        systemImagePackage: String = DeviceProfile.appleSiliconDefaultImage,
         systemSettings: GuestSystemSettings = .default,
         orientationRules: [AppOrientationRule]? = nil
     ) -> InstanceConfiguration {
@@ -241,6 +245,7 @@ public struct InstanceConfiguration: Sendable, Hashable, Codable {
             diskSizeMB: diskSizeMB ?? runtimeProfile.diskSizeMB,
             rootEnabled: rootEnabled,
             adbEnabled: adbEnabled,
+            systemImagePackage: systemImagePackage,
             systemSettings: systemSettings,
             orientationRules: orientationRules
         )
@@ -248,6 +253,10 @@ public struct InstanceConfiguration: Sendable, Hashable, Codable {
 
     public var resolvedSystemSettings: GuestSystemSettings {
         systemSettings ?? .default
+    }
+
+    public var resolvedSystemImagePackage: String {
+        systemImagePackage ?? DeviceProfile.appleSiliconDefaultImage
     }
 
     public var resolvedOrientationRules: [AppOrientationRule] {

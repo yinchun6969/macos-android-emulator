@@ -63,13 +63,13 @@ public enum RuntimeProfile: String, CaseIterable, Sendable, Hashable, Codable {
     public var memoryMB: Int {
         switch self {
         case .lean:
-            return 2048
+            return 1536
         case .balanced:
-            return 3072
+            return 2048
         case .performance:
-            return 4096
+            return 3072
         case .game:
-            return 6144
+            return 3072
         }
     }
 
@@ -78,11 +78,11 @@ public enum RuntimeProfile: String, CaseIterable, Sendable, Hashable, Codable {
         case .lean:
             return 2
         case .balanced:
-            return 3
+            return 2
         case .performance:
-            return 4
+            return 3
         case .game:
-            return 4
+            return 2
         }
     }
 
@@ -102,13 +102,13 @@ public enum RuntimeProfile: String, CaseIterable, Sendable, Hashable, Codable {
     public var vmHeapMB: Int {
         switch self {
         case .lean:
-            return 192
+            return 128
         case .balanced:
-            return 256
+            return 192
         case .performance:
-            return 384
+            return 256
         case .game:
-            return 512
+            return 384
         }
     }
 
@@ -128,13 +128,13 @@ public enum RuntimeProfile: String, CaseIterable, Sendable, Hashable, Codable {
     public var hostOverheadMB: Int {
         switch self {
         case .lean:
-            return 1024
+            return 768
         case .balanced:
-            return 1280
+            return 1024
         case .performance:
-            return 1536
+            return 1280
         case .game:
-            return 1792
+            return 1280
         }
     }
 
@@ -150,7 +150,19 @@ public enum RuntimeProfile: String, CaseIterable, Sendable, Hashable, Codable {
             "hw.gpu.enabled": "yes",
             "hw.gpu.mode": gpuMode,
             "hw.keyboard": "yes",
+            "hw.lcd.depth": "16",
             "hw.ramSize": String(memoryMB),
+            "hw.sensors.gyroscope": "no",
+            "hw.sensors.accelerometer": "no",
+            "hw.sensors.proximity": "no",
+            "hw.sensors.light": "no",
+            "hw.sensors.pressure": "no",
+            "hw.sensors.humidity": "no",
+            "hw.sensors.magnetic_field": "no",
+            "hw.sensors.temperature": "no",
+            "hw.gps": "no",
+            "hw.sdCard": "yes",
+            "sdcard.size": "512 MB",
             "showDeviceFrame": "no",
             "vm.heapSize": String(vmHeapMB)
         ]

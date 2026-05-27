@@ -99,6 +99,7 @@ public final class InstancePoolManager {
                     diskSizeMB: configuration.diskSizeMB,
                     rootEnabled: configuration.rootEnabled,
                     adbEnabled: configuration.adbEnabled,
+                    systemImagePackage: configuration.resolvedSystemImagePackage,
                     systemSettings: systemSettings,
                     orientationRules: configuration.resolvedOrientationRules
                 )

@@ -16,7 +16,7 @@
 - Per-instance virtual identity: IMEI, IMSI, Android ID, serial, Wi-Fi MAC, and phone number.
 - Randomized model and identity when copying instances.
 - Display, DPI, FPS, CPU, memory, disk, Root, and ADB settings.
-- Runtime profiles include `lean`, `balanced`, `performance`, and `game`; `game` uses 6 GB RAM, 4 cores, Host GPU, and a 512 MB VM heap.
+- Runtime profiles include `lean`, `balanced`, `performance`, and `game`; `game` uses 3 GB RAM, 4 cores, Host GPU, and a 512 MB VM heap.
 - Android settings shortcuts: language, accessibility, battery optimization, and settings.
 - Network repair shortcut: disables airplane mode, enables Wi-Fi/mobile data, and boots the emulator with full-speed network parameters.
 - App-based auto rotation, for example `com.u1game.cabalm` landscape and launcher portrait.

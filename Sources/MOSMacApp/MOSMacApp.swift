@@ -79,6 +79,7 @@ enum L10n {
         "systemImage": [.zh: "系统镜像", .en: "System Image"],
         "android15": [.zh: "Android 15", .en: "Android 15"],
         "android9Compat": [.zh: "Android 9 兼容", .en: "Android 9 Compat"],
+        "switchImage": [.zh: "切换系统版本", .en: "Switch Android"],
         "display": [.zh: "显示", .en: "Display"],
         "system": [.zh: "系统", .en: "System"],
         "macro": [.zh: "点击器", .en: "Clicker"],
@@ -799,6 +800,10 @@ struct ContentView: View {
                 Button(t("android9Compat")) {
                     viewModel.systemImagePackage = DeviceProfile.appleSiliconGameCompatibilityImage
                 }
+                Button(t("switchImage")) {
+                    viewModel.switchSystemImage()
+                }
+                .disabled(viewModel.selectedAVDName == nil)
             }
 
             HStack {
@@ -1056,7 +1061,7 @@ final class DashboardViewModel: ObservableObject {
         perform("Creating \(name)") { platform in
             try platform.avdManager.createAVD(
                 configuration: configuration,
-                package: systemImagePackage,
+                package: configuration.resolvedSystemImagePackage,
                 device: DeviceProfile.appleSiliconDefault.deviceIdentifier,
                 force: false
             )
@@ -1085,6 +1090,20 @@ final class DashboardViewModel: ObservableObject {
             )
         }
         instanceName = destination
+    }
+
+    func switchSystemImage() {
+        guard let selectedAVDName else {
+            return
+        }
+        let package = systemImagePackage
+        perform("Switching Android image") { platform in
+            _ = try platform.avdManager.switchSystemImage(
+                name: selectedAVDName,
+                package: package,
+                device: DeviceProfile.appleSiliconDefault.deviceIdentifier
+            )
+        }
     }
 
     func deleteSelectedInstance() {
@@ -1501,6 +1520,7 @@ final class DashboardViewModel: ObservableObject {
             diskSizeMB: diskSizeMB,
             rootEnabled: rootEnabled,
             adbEnabled: adbEnabled,
+            systemImagePackage: systemImagePackage,
             systemSettings: currentSystemSettings,
             orientationRules: currentOrientationRules
         )
@@ -1565,6 +1585,7 @@ final class DashboardViewModel: ObservableObject {
         diskSizeMB = configuration.diskSizeMB
         rootEnabled = configuration.rootEnabled
         adbEnabled = configuration.adbEnabled
+        systemImagePackage = configuration.resolvedSystemImagePackage
         let systemSettings = configuration.resolvedSystemSettings
         guestLocale = systemSettings.localeIdentifier
         accessibilityEnabled = systemSettings.accessibilityEnabled

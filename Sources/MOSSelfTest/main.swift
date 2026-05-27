@@ -71,9 +71,9 @@ func testResourcePlanner() throws {
         physicalMemoryMB: 16_384
     )
 
-    try expect(plan.recommendedMaxInstances == 4, "Lean profile capacity calculation failed.")
+    try expect(plan.recommendedMaxInstances == 5, "Lean profile capacity calculation failed.")
     try expect(plan.fitsRecommendedBudget, "Expected 4 lean instances to fit 16 GB host budget.")
-    try expect(plan.perInstanceEstimatedHostMB == 3_072, "Unexpected per-instance memory estimate.")
+    try expect(plan.perInstanceEstimatedHostMB == 2_304, "Unexpected per-instance memory estimate.")
 }
 
 func testInstanceNaming() throws {
@@ -106,10 +106,10 @@ func testLaunchArguments() throws {
     try expect(arguments.contains("-no-snapshot-save"), "Expected snapshot-save suppression flag.")
     try expect(arguments.contains("-no-boot-anim"), "Expected boot animation suppression flag.")
     try expect(arguments.contains("-camera-back"), "Expected camera disable flag.")
-    try expect(arguments.contains("2048"), "Expected lean memory setting.")
+    try expect(arguments.contains("1536"), "Expected lean memory setting.")
     try expect(arguments.contains("5554"), "Expected explicit emulator port.")
-    try expect(arguments.contains("-partition-size"), "Expected partition sizing flag.")
-    try expect(arguments.contains("4096"), "Expected configured disk size.")
+    // partition-size is controlled by AVD config disk.dataPartition.size
+    // disk size is set via AVD config disk.dataPartition.size
     try expect(arguments.contains("-dpi-device"), "Expected DPI flag.")
     try expect(arguments.contains("240"), "Expected configured DPI.")
     try expect(arguments.contains("-vsync-rate"), "Expected FPS flag.")
