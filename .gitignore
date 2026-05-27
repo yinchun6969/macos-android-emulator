@@ -1,0 +1,25 @@
+.build/
+.swiftpm/
+DerivedData/
+*.xcuserdata/
+*.xcuserstate
+
+.DS_Store
+*.log
+*.tmp
+
+# Android Emulator generated state. Keep user instances and large images out of git.
+*.avd/
+*.ini.lock
+*.qcow2
+*.img
+*.lock
+snapshots/
+data-backup-*/
+
+# App/game payloads and distributable archives.
+*.apk
+*.aab
+*.ipa
+*.dmg
+*.zip
