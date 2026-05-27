@@ -129,3 +129,35 @@ com.u1game.cabalm
 4. 使用「重建数据盘」或后续扩容工具处理旧数据盘。
 
 重建数据盘会备份旧数据盘，但会让当前实例内已安装应用重新初始化。
+
+## 安装 APK
+
+小文件（< 500MB）直接使用 `adb install`。
+
+大文件（3GB+ 游戏 APK）自动采用两步策略：
+1. `adb push` 将 APK 推送到 `/data/local/tmp/`
+2. `pm install -r -g` 从设备本地安装
+
+此方案避免了 ADB 直连超时问题，对 3.6GB 级别的游戏 APK（如新惊天动地）安装成功率接近 100%。
+
+也可以用 CLI 手动安装：
+```bash
+mosctl install-apk auto /path/to/game.apk
+```
+
+## 内存优化
+
+各档位内存配置（对标 LDPlayer/MuMu 级别）：
+
+| 档位 | 内存 | 核心 | VM Heap | GPU |
+|------|------|------|---------|-----|
+| lean | 1.5 GB | 2 | 128 MB | swiftshader |
+| balanced | 2 GB | 2 | 192 MB | auto |
+| performance | 3 GB | 3 | 256 MB | host |
+| game | 3 GB | 2 | 384 MB | host |
+
+额外优化措施：
+- 禁用不需要的传感器（陀螺仪、加速度计、GPS 等）
+- LCD 色深降至 16-bit
+- 禁用音频输入输出
+- 禁用前后摄像头

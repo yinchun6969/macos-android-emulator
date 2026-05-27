@@ -74,3 +74,18 @@ See [docs/usage.en.md](docs/usage.en.md) for details.
 ## License Status
 
 No open-source license has been selected yet. Confirm the license before publishing a public release. See [LICENSE_NOTICE.md](LICENSE_NOTICE.md).
+
+## Disclaimer
+
+This is an open-source community project, not affiliated with Google, Android, MuMu, LDPlayer, BlueStacks, or any commercial Android emulator.
+
+- This software is provided "as is" without warranty of any kind.
+- Users are solely responsible for any consequences of using this software.
+- This project does not collect any user data.
+- Usage of Android SDK and its components is subject to Google's license agreements.
+
+## License
+
+Source code is released under the MIT License. See [LICENSE](LICENSE).
+
+Android SDK, system images, and the emulator engine are provided by Google and subject to their own license agreements.

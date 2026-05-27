@@ -42,6 +42,13 @@ public final class ADBManager {
             throw MOSError.invalidArgument("APK not found: \(apkPath)")
         }
 
+        let fileSize = (try? FileManager.default.attributesOfItem(atPath: apkPath)[.size] as? NSNumber)?.int64Value ?? 0
+        // For APKs over 500MB, use push + pm install (more reliable than adb install)
+        if fileSize > 500 * 1024 * 1024 {
+            try installLargeAPK(serial: serial, apkPath: apkPath, adb: adb, replace: replace, grantPermissions: grantPermissions)
+            return
+        }
+
         var arguments = ["-s", serial, "install"]
         if replace {
             arguments.append("-r")
@@ -54,15 +61,12 @@ public final class ADBManager {
         }
         arguments.append(apkPath)
 
-        let fileSize = (try? FileManager.default.attributesOfItem(atPath: apkPath)[.size] as? NSNumber)?.int64Value ?? 0
-        // For large APKs (3GB+), use generous timeout: ~1MB/s transfer + 30min buffer
-        let timeout = max(1800, TimeInterval(fileSize / (1024 * 1024)) + 1800)
+        let timeout = max(600, TimeInterval(fileSize / (1024 * 1024)) + 600)
         let result = try runner.run(adb, arguments: arguments, environment: sdk.toolEnvironment, input: nil, timeout: timeout)
         if result.succeeded {
             return
         }
 
-        // First fallback: retry without streaming
         if streaming {
             let fallbackArguments = arguments.filter { $0 != "--streaming" }
             let retryResult = try runner
@@ -72,19 +76,63 @@ public final class ADBManager {
             }
         }
 
-        // Second fallback: try with -t flag (force streamable install) for split APKs
-        if !apkPath.hasSuffix(".apks") {
-            var retryArguments = ["-s", serial, "install", "-t"]
-            if replace { retryArguments.append("-r") }
-            if grantPermissions { retryArguments.append("-g") }
-            retryArguments.append(apkPath)
-            let lastResult = try runner.run(adb, arguments: retryArguments, environment: sdk.toolEnvironment, input: nil, timeout: timeout)
-            if lastResult.succeeded {
-                return
-            }
-            _ = try lastResult.requireSuccess()
-        } else {
-            _ = try result.requireSuccess()
+        _ = try result.requireSuccess()
+    }
+
+    private func installLargeAPK(
+        serial: String,
+        apkPath: String,
+        adb: URL,
+        replace: Bool,
+        grantPermissions: Bool
+    ) throws {
+        let remotePath = "/data/local/tmp/macos_install.apk"
+        let fileSize = (try? FileManager.default.attributesOfItem(atPath: apkPath)[.size] as? NSNumber)?.int64Value ?? 0
+        // Push timeout: ~20MB/s minimum + 10min buffer
+        let pushTimeout = max(600, TimeInterval(fileSize / (20 * 1024 * 1024)) + 600)
+
+        _ = try runner
+            .run(
+                adb,
+                arguments: ["-s", serial, "push", apkPath, remotePath],
+                environment: sdk.toolEnvironment,
+                input: nil,
+                timeout: pushTimeout
+            )
+            .requireSuccess()
+
+        // Install from local file on device
+        var pmArguments = ["-s", serial, "shell", "pm", "install"]
+        if replace {
+            pmArguments.append("-r")
+        }
+        if grantPermissions {
+            pmArguments.append("-g")
+        }
+        pmArguments.append(remotePath)
+
+        let installTimeout = max(600, TimeInterval(fileSize / (50 * 1024 * 1024)) + 600)
+        let installResult = try runner
+            .run(
+                adb,
+                arguments: pmArguments,
+                environment: sdk.toolEnvironment,
+                input: nil,
+                timeout: installTimeout
+            )
+
+        // Clean up temp file
+        _ = try? runner
+            .run(
+                adb,
+                arguments: ["-s", serial, "shell", "rm", "-f", remotePath],
+                environment: sdk.toolEnvironment,
+                input: nil,
+                timeout: 30
+            )
+
+        if !installResult.succeeded {
+            throw MOSError.invalidArgument("Failed to install APK on device: \(installResult.stderr)")
         }
     }
 

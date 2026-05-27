@@ -130,3 +130,35 @@ Changing the disk value updates the instance configuration. For existing instanc
 4. Rebuild the data disk or use a future expansion tool.
 
 Rebuilding backs up the old data disk, but the instance will initialize with a fresh Android data partition.
+
+## Installing APKs
+
+Small files (< 500MB) use `adb install` directly.
+
+Large files (3GB+ game APKs) automatically use a two-step strategy:
+1. `adb push` the APK to `/data/local/tmp/`
+2. `pm install -r -g` from local device storage
+
+This avoids ADB direct timeout issues and achieves near-100% success for 3.6GB game APKs.
+
+CLI install:
+```bash
+mosctl install-apk auto /path/to/game.apk
+```
+
+## Memory Optimization
+
+Profile memory configurations (matching LDPlayer/MuMu level):
+
+| Profile | Memory | Cores | VM Heap | GPU |
+|---------|--------|-------|---------|-----|
+| lean | 1.5 GB | 2 | 128 MB | swiftshader |
+| balanced | 2 GB | 2 | 192 MB | auto |
+| performance | 3 GB | 3 | 256 MB | host |
+| game | 3 GB | 2 | 384 MB | host |
+
+Additional optimizations:
+- Disabled unnecessary sensors (gyroscope, accelerometer, GPS, etc.)
+- LCD color depth reduced to 16-bit
+- Audio input/output disabled
+- Camera front/back disabled

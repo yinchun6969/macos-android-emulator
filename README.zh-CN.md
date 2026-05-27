@@ -74,3 +74,18 @@ open .build/macOS.app
 ## 开源状态
 
 目前还没有选择开源许可证。公开发布前请先确认许可证类型。见 [LICENSE_NOTICE.md](LICENSE_NOTICE.md)。
+
+## 免责声明
+
+本项目为开源社区项目，与 Google、Android、MuMu、雷电模拟器、BlueStacks 或任何商业安卓模拟器无关联。
+
+- 本软件按"原样"提供，不作任何明示或暗示的保证。
+- 使用本软件产生的任何后果由用户自行承担。
+- 本项目不收集任何用户数据。
+- Android SDK 及其组件的使用须遵守 Google 的许可协议。
+
+## 许可证
+
+本项目源代码基于 MIT 许可证发布。详见 [LICENSE](LICENSE)。
+
+Android SDK、系统镜像和模拟器引擎由 Google 提供，受其自有许可协议约束。
