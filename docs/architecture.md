@@ -68,16 +68,16 @@ Each visible multi-open slot is an independent AVD by default. This avoids share
 
 The default `lean` profile is optimized for multi-open:
 
-- 2 GB guest RAM and 2 CPU cores.
+- 1.5 GB guest RAM and 2 CPU cores.
 - 50 GB data partition by default, because modern games often download large secondary assets after APK install.
 - Disabled audio, cameras, boot animation, metrics, and snapshot saving.
 - `swiftshader_indirect` GPU mode for predictable low-footprint headless/background runs.
 
-`balanced`, `performance`, and `game` keep the same orchestration model while raising RAM, cores, and disk allocation for heavier apps. The `game` profile uses 6 GB guest RAM, 4 CPU cores, Host GPU, and a 512 MB VM heap.
+`balanced`, `performance`, and `game` keep the same orchestration model while raising RAM, cores, and disk allocation for heavier apps. The `game` profile uses 3 GB guest RAM, 2 CPU cores, Host GPU, and a 512 MB VM heap. Each saved instance can override memory, core count, and GPU mode, so a compatibility-only game can use `Software` GPU without changing every other instance.
 
 ## Identity And Model Strategy
 
-The app stores generated IMEI, IMSI, Android ID, serial, Wi-Fi MAC, phone number, model, brand, GPU, display, and disk settings in `.macos-instance.json` inside each AVD directory. Copying an instance duplicates the source AVD and rewrites this file with a randomized device profile and identity.
+The app stores generated IMEI, IMSI, Android ID, serial, Wi-Fi MAC, phone number, model, brand, GPU mode, runtime overrides, display, and disk settings in `.macos-instance.json` inside each AVD directory. Copying an instance duplicates the source AVD and rewrites this file with a randomized device profile and identity.
 
 Official Android Emulator accepts serial, display, DPI, FPS, phone number, partition size, root/writable-system, and ADB related arguments directly. Full runtime spoofing of IMEI and read-only `ro.product.*` values requires a custom rooted image or framework-level injection, so the current implementation stores those values and exposes `inject-identity` as the bridge for writable settings and future root modules.
 

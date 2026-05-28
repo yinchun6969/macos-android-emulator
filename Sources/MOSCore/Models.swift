@@ -108,7 +108,7 @@ public enum RuntimeProfile: String, CaseIterable, Sendable, Hashable, Codable {
         case .performance:
             return 256
         case .game:
-            return 384
+            return 512
         }
     }
 
@@ -150,17 +150,17 @@ public enum RuntimeProfile: String, CaseIterable, Sendable, Hashable, Codable {
             "hw.gpu.enabled": "yes",
             "hw.gpu.mode": gpuMode,
             "hw.keyboard": "yes",
-            "hw.lcd.depth": "16",
+            "hw.lcd.depth": "32",
             "hw.ramSize": String(memoryMB),
-            "hw.sensors.gyroscope": "no",
-            "hw.sensors.accelerometer": "no",
-            "hw.sensors.proximity": "no",
-            "hw.sensors.light": "no",
-            "hw.sensors.pressure": "no",
-            "hw.sensors.humidity": "no",
-            "hw.sensors.magnetic_field": "no",
-            "hw.sensors.temperature": "no",
-            "hw.gps": "no",
+            "hw.sensors.gyroscope": "yes",
+            "hw.sensors.accelerometer": "yes",
+            "hw.sensors.proximity": "yes",
+            "hw.sensors.light": "yes",
+            "hw.sensors.pressure": "yes",
+            "hw.sensors.humidity": "yes",
+            "hw.sensors.magnetic_field": "yes",
+            "hw.sensors.temperature": "yes",
+            "hw.gps": "yes",
             "hw.sdCard": "yes",
             "sdcard.size": "512 MB",
             "showDeviceFrame": "no",

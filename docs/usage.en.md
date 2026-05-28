@@ -92,8 +92,23 @@ Apply once from CLI:
 
 - Use the `game` runtime profile for mobile games.
 - If black screen or ANR appears, disable Root and cold boot: `set-config <name> --no-root --profile game --disk 51200`.
+- If a game enters successfully but feels slow, try `Host` GPU first. If `Host` renders a black 3D scene, switch back to `Software` compatibility mode and lower FPS to 30 or 45.
+- If logcat contains `emuglGLESv2_enc` vertex attribute errors, the likely cause is the official Android Emulator GLES translation layer on Apple Silicon, not a missing APK resource, disk capacity, or game data file.
+- Saved instances now persist memory, CPU core count, and GPU mode independently, so switching instances does not reuse another instance's performance settings.
 - Android 15 restricts normal apps from reading IMEI/device identifiers; older game SDKs that depend on those APIs may work better on the Android 9/API 28 compatibility image.
 - Some ad, analytics, or one-tap-login DNS failures may not block the main game. Use the actual game screen and logcat together.
+
+Performance-first:
+
+```bash
+.build/debug/mosctl set-config macos_game_a9_01 --profile game --memory 3072 --cores 2 --gpu host --fps 60
+```
+
+Compatibility-first:
+
+```bash
+.build/debug/mosctl set-config macos_game_a9_01 --profile game --memory 3072 --cores 2 --gpu software --fps 45
+```
 
 ## 8. Clicker And Macro Scripts
 
@@ -155,10 +170,12 @@ Profile memory configurations (matching LDPlayer/MuMu level):
 | lean | 1.5 GB | 2 | 128 MB | swiftshader |
 | balanced | 2 GB | 2 | 192 MB | auto |
 | performance | 3 GB | 3 | 256 MB | host |
-| game | 3 GB | 2 | 384 MB | host |
+| game | 3 GB | 2 | 512 MB | host |
 
 Additional optimizations:
-- Disabled unnecessary sensors (gyroscope, accelerometer, GPS, etc.)
-- LCD color depth reduced to 16-bit
+- Memory, CPU core count, and GPU mode are saved per instance
+- `Host` GPU is fastest; `Software` GPU is more compatible but slower
+- 32-bit LCD color depth is kept to avoid texture and post-processing issues in some 3D games
+- Common sensors such as gyroscope, accelerometer, and GPS stay enabled to avoid false device-capability failures
 - Audio input/output disabled
 - Camera front/back disabled

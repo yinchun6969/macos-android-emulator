@@ -498,10 +498,11 @@ struct ContentView: View {
                 Picker("", selection: $viewModel.gpuMode) {
                     Text("Auto").tag("auto")
                     Text("Host").tag("host")
+                    Text("Software").tag("software")
                     Text("SwiftShader").tag("swiftshader_indirect")
                 }
                 .pickerStyle(.segmented)
-                .frame(width: 360)
+                .frame(width: 460)
             }
         }
     }
@@ -1083,6 +1084,9 @@ final class DashboardViewModel: ObservableObject {
                 randomizedSpec: DeviceCatalog.randomSpec(),
                 display: currentDisplay,
                 runtimeProfile: selectedRuntimeProfile,
+                memoryMBOverride: memoryMB,
+                coresOverride: cores,
+                gpuModeOverride: gpuMode,
                 diskSizeMB: diskSizeMB,
                 rootEnabled: rootEnabled,
                 adbEnabled: adbEnabled,
@@ -1517,6 +1521,9 @@ final class DashboardViewModel: ObservableObject {
             identity: identity,
             display: currentDisplay,
             runtimeProfile: selectedRuntimeProfile,
+            memoryMBOverride: memoryMB,
+            coresOverride: cores,
+            gpuModeOverride: gpuMode,
             diskSizeMB: diskSizeMB,
             rootEnabled: rootEnabled,
             adbEnabled: adbEnabled,
@@ -1579,9 +1586,9 @@ final class DashboardViewModel: ObservableObject {
         phoneNumber = configuration.identity.phoneNumber
         applyDisplay(configuration.display)
         profileRawValue = configuration.runtimeProfile.rawValue
-        memoryMB = configuration.runtimeProfile.memoryMB
-        cores = configuration.runtimeProfile.cores
-        gpuMode = configuration.runtimeProfile.gpuMode
+        memoryMB = configuration.resolvedMemoryMB
+        cores = configuration.resolvedCores
+        gpuMode = configuration.resolvedGPUMode
         diskSizeMB = configuration.diskSizeMB
         rootEnabled = configuration.rootEnabled
         adbEnabled = configuration.adbEnabled

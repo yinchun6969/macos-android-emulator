@@ -175,7 +175,7 @@ func showConfig(_ args: [String]) throws {
 
 func setConfig(_ args: [String]) throws {
     guard let name = firstPositional(args, valueOptions: valueOptions) else {
-        throw MOSError.invalidArgument("Usage: mosctl set-config <avd-name> [--display <WxH@DPI>] [--fps <n>] [--disk <mb>] [--profile <profile>] [--root|--no-root] [--adb|--no-adb] [--locale zh-CN] [--accessibility] [--accessibility-service pkg/.Service] [--keep-battery-optimization] [--no-stay-awake]")
+        throw MOSError.invalidArgument("Usage: mosctl set-config <avd-name> [--display <WxH@DPI>] [--fps <n>] [--disk <mb>] [--profile <profile>] [--memory <mb>] [--cores <n>] [--gpu <mode>] [--root|--no-root] [--adb|--no-adb] [--locale zh-CN] [--accessibility] [--accessibility-service pkg/.Service] [--keep-battery-optimization] [--no-stay-awake]")
     }
 
     let platform = try MOSPlatform.discover()
@@ -183,13 +183,17 @@ func setConfig(_ args: [String]) throws {
         throw MOSError.invalidArgument("No macOS instance config found for \(name).")
     }
 
+    let requestedProfile = try runtimeProfileIfPresent(in: args)
     let updated = InstanceConfiguration(
         avdName: current.avdName,
         deviceName: current.deviceName,
         deviceSpec: current.deviceSpec,
         identity: current.identity,
-        display: try displayProfileIfPresent(in: args) ?? current.display,
-        runtimeProfile: try runtimeProfileIfPresent(in: args) ?? current.runtimeProfile,
+        display: try displayProfileIfPresent(in: args, base: current.display) ?? current.display,
+        runtimeProfile: requestedProfile ?? current.runtimeProfile,
+        memoryMBOverride: try option("--memory", in: args).flatMap(Int.init) ?? (requestedProfile == nil ? current.memoryMBOverride : nil),
+        coresOverride: try option("--cores", in: args).flatMap(Int.init) ?? (requestedProfile == nil ? current.coresOverride : nil),
+        gpuModeOverride: try option("--gpu", in: args) ?? (requestedProfile == nil ? current.gpuModeOverride : nil),
         diskSizeMB: try option("--disk", in: args).flatMap(Int.init) ?? current.diskSizeMB,
         rootEnabled: flag("--root", in: args) ? true : flag("--no-root", in: args) ? false : current.rootEnabled,
         adbEnabled: flag("--adb", in: args) ? true : flag("--no-adb", in: args) ? false : current.adbEnabled,
@@ -254,14 +258,17 @@ func createAVD(_ args: [String]) throws {
         avdName: name,
         deviceName: try option("--display-name", in: args) ?? name,
         deviceSpec: spec,
-            display: display,
-            runtimeProfile: runtimeProfile,
-            diskSizeMB: diskSizeMB,
-            rootEnabled: rootEnabled,
-            adbEnabled: adbEnabled,
-            systemImagePackage: package,
-            systemSettings: systemSettings
-        )
+        display: display,
+        runtimeProfile: runtimeProfile,
+        memoryMBOverride: try option("--memory", in: args).flatMap(Int.init),
+        coresOverride: try option("--cores", in: args).flatMap(Int.init),
+        gpuModeOverride: try option("--gpu", in: args),
+        diskSizeMB: diskSizeMB,
+        rootEnabled: rootEnabled,
+        adbEnabled: adbEnabled,
+        systemImagePackage: package,
+        systemSettings: systemSettings
+    )
 
     let platform = try MOSPlatform.discover()
     try platform.avdManager.createAVD(
@@ -298,6 +305,9 @@ func copyAVD(_ args: [String]) throws {
         randomizedSpec: DeviceCatalog.randomSpec(),
         display: display,
         runtimeProfile: profile,
+        memoryMBOverride: try option("--memory", in: args).flatMap(Int.init),
+        coresOverride: try option("--cores", in: args).flatMap(Int.init),
+        gpuModeOverride: try option("--gpu", in: args),
         diskSizeMB: diskSizeMB,
         rootEnabled: rootEnabled,
         adbEnabled: adbEnabled,
@@ -311,6 +321,9 @@ func copyAVD(_ args: [String]) throws {
             identity: configuration.identity,
             display: configuration.display,
             runtimeProfile: configuration.runtimeProfile,
+            memoryMBOverride: configuration.memoryMBOverride,
+            coresOverride: configuration.coresOverride,
+            gpuModeOverride: configuration.gpuModeOverride,
             diskSizeMB: configuration.diskSizeMB,
             rootEnabled: configuration.rootEnabled,
             adbEnabled: configuration.adbEnabled,
@@ -439,7 +452,7 @@ func optimizePool(_ args: [String]) throws {
 func boot(_ args: [String]) throws {
     guard let name = firstPositional(args, valueOptions: valueOptions) else {
         throw MOSError.invalidArgument(
-            "Usage: mosctl boot <avd-name> [--profile lean|balanced|performance|game] [--headless] [--gpu <auto|host|swiftshader_indirect>] [--memory <mb>] [--cores <n>] [--port <n>] [--read-only] [--no-snapshot]"
+            "Usage: mosctl boot <avd-name> [--profile lean|balanced|performance|game] [--headless] [--gpu <auto|host|software|swiftshader_indirect>] [--memory <mb>] [--cores <n>] [--port <n>] [--read-only] [--no-snapshot]"
         )
     }
 
@@ -790,10 +803,10 @@ func displayProfile(in args: [String]) throws -> DisplayProfile {
     try displayProfileIfPresent(in: args) ?? .defaultPreset
 }
 
-func displayProfileIfPresent(in args: [String]) throws -> DisplayProfile? {
+func displayProfileIfPresent(in args: [String], base: DisplayProfile? = nil) throws -> DisplayProfile? {
     guard let raw = try option("--display", in: args) else {
         if let fps = try option("--fps", in: args).flatMap(Int.init) {
-            let base = DisplayProfile.defaultPreset
+            let base = base ?? DisplayProfile.defaultPreset
             return DisplayProfile(
                 name: base.name,
                 category: base.category,
@@ -885,7 +898,7 @@ func printHelp() {
           mosctl brands
           mosctl models <brand>
           mosctl config <avd-name>
-          mosctl set-config <avd-name> [--display <WxH@DPI>] [--fps <n>] [--disk <mb>] [--profile <profile>] [--root|--no-root] [--adb|--no-adb] [--locale zh-CN] [--accessibility] [--keep-battery-optimization] [--no-stay-awake]
+          mosctl set-config <avd-name> [--display <WxH@DPI>] [--fps <n>] [--disk <mb>] [--profile <profile>] [--memory <mb>] [--cores <n>] [--gpu <mode>] [--root|--no-root] [--adb|--no-adb] [--locale zh-CN] [--accessibility] [--keep-battery-optimization] [--no-stay-awake]
           mosctl plan <count> [--profile lean|balanced|performance|game]
           mosctl migrate-storage [--force]
           mosctl install-image <system-image-package>

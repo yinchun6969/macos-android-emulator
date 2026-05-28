@@ -15,10 +15,10 @@
 - Device presets for HUAWEI, SAMSUNG, Google, Xiaomi, Redmi, OPPO, vivo, OnePlus, and HONOR.
 - Per-instance virtual identity: IMEI, IMSI, Android ID, serial, Wi-Fi MAC, and phone number.
 - Randomized model and identity when copying instances.
-- Display, DPI, FPS, CPU, memory, disk, Root, and ADB settings.
-- Runtime profiles include `lean`, `balanced`, `performance`, and `game`; `game` uses 3 GB RAM, 4 cores, Host GPU, and a 512 MB VM heap.
+- Per-instance display, DPI, FPS, CPU, memory, GPU, disk, Root, and ADB settings.
+- Runtime profiles include `lean`, `balanced`, `performance`, and `game`; `game` uses 3 GB RAM, 2 cores, Host GPU, and a 512 MB VM heap. GPU can be switched between `Host`, `Software`, and `SwiftShader` for performance/compatibility fallback.
 - Android settings shortcuts: language, accessibility, battery optimization, and settings.
-- Network repair shortcut: disables airplane mode, enables Wi-Fi/mobile data, and boots the emulator with full-speed network parameters.
+- Network repair shortcut: disables airplane mode, enables Wi-Fi/mobile data, clears guest proxy/Private DNS/IPv6 proxy state, and boots the emulator with full-speed network parameters.
 - App-based auto rotation, for example `com.u1game.cabalm` landscape and launcher portrait.
 - Clicker and macro scripts: screenshot-based tap recording, swipe recording, waits, JSON save/load, repeat playback, and speed control.
 - Large APK installation with real `/data` space checks and automatic fallback when streaming install fails.

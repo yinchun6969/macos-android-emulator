@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Game Performance And Compatibility
+- Persist per-instance memory, CPU core count, and GPU mode overrides.
+- Added `Software` GPU mode to the macOS performance UI for games that fail on Host GPU.
+- Restored 32-bit LCD color depth and common sensors/GPS for better 3D game compatibility.
+- Network repair now clears guest proxy, Private DNS, IPv6 addresses, and `ipv6proxy` state to avoid VPN/IPv6 routing stalls for mainland game servers.
+- Game profile uses **3GB/2cores**, Host GPU, and **512MB** VM heap by default.
+
 ## v0.2.0 - 2026-05-28
 
 ### Memory Optimization
@@ -7,8 +16,6 @@
 - Lean profile: 2GB → **1.5GB**
 - Balanced profile: 3GB → **2GB**
 - Performance profile: 4GB → **3GB**
-- Disabled unnecessary sensors (gyroscope, accelerometer, GPS, proximity, light, pressure, humidity, temperature, magnetic field) in AVD config
-- LCD color depth reduced to 16-bit for lower VRAM usage
 - VM heap sizes optimized per profile
 
 ### Large APK Install Fix

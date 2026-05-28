@@ -89,6 +89,9 @@ func testLaunchArguments() throws {
         deviceSpec: DeviceCatalog.defaultSpec,
         display: DisplayProfile(name: "1280 x 720 240 DPI", category: .tablet, width: 1280, height: 720, dpi: 240, fps: 30),
         runtimeProfile: .lean,
+        memoryMBOverride: 3072,
+        coresOverride: 2,
+        gpuModeOverride: "host",
         diskSizeMB: 4096,
         rootEnabled: true,
         adbEnabled: true
@@ -106,7 +109,8 @@ func testLaunchArguments() throws {
     try expect(arguments.contains("-no-snapshot-save"), "Expected snapshot-save suppression flag.")
     try expect(arguments.contains("-no-boot-anim"), "Expected boot animation suppression flag.")
     try expect(arguments.contains("-camera-back"), "Expected camera disable flag.")
-    try expect(arguments.contains("1536"), "Expected lean memory setting.")
+    try expect(arguments.contains("3072"), "Expected per-instance memory override.")
+    try expect(arguments.contains("host"), "Expected per-instance GPU override.")
     try expect(arguments.contains("5554"), "Expected explicit emulator port.")
     // partition-size is controlled by AVD config disk.dataPartition.size
     // disk size is set via AVD config disk.dataPartition.size

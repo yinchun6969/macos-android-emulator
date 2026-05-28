@@ -187,6 +187,9 @@ public struct InstanceConfiguration: Sendable, Hashable, Codable {
     public let identity: VirtualIdentity
     public let display: DisplayProfile
     public let runtimeProfile: RuntimeProfile
+    public let memoryMBOverride: Int?
+    public let coresOverride: Int?
+    public let gpuModeOverride: String?
     public let diskSizeMB: Int
     public let rootEnabled: Bool
     public let adbEnabled: Bool
@@ -201,6 +204,9 @@ public struct InstanceConfiguration: Sendable, Hashable, Codable {
         identity: VirtualIdentity,
         display: DisplayProfile,
         runtimeProfile: RuntimeProfile,
+        memoryMBOverride: Int? = nil,
+        coresOverride: Int? = nil,
+        gpuModeOverride: String? = nil,
         diskSizeMB: Int,
         rootEnabled: Bool,
         adbEnabled: Bool,
@@ -214,6 +220,9 @@ public struct InstanceConfiguration: Sendable, Hashable, Codable {
         self.identity = identity
         self.display = display
         self.runtimeProfile = runtimeProfile
+        self.memoryMBOverride = memoryMBOverride
+        self.coresOverride = coresOverride
+        self.gpuModeOverride = gpuModeOverride
         self.diskSizeMB = diskSizeMB
         self.rootEnabled = rootEnabled
         self.adbEnabled = adbEnabled
@@ -228,6 +237,9 @@ public struct InstanceConfiguration: Sendable, Hashable, Codable {
         deviceSpec: AndroidDeviceSpec = DeviceCatalog.defaultSpec,
         display: DisplayProfile = .defaultPreset,
         runtimeProfile: RuntimeProfile = .lean,
+        memoryMBOverride: Int? = nil,
+        coresOverride: Int? = nil,
+        gpuModeOverride: String? = nil,
         diskSizeMB: Int? = nil,
         rootEnabled: Bool = false,
         adbEnabled: Bool = true,
@@ -242,6 +254,9 @@ public struct InstanceConfiguration: Sendable, Hashable, Codable {
             identity: VirtualIdentityGenerator.makeIdentity(for: deviceSpec),
             display: display,
             runtimeProfile: runtimeProfile,
+            memoryMBOverride: memoryMBOverride,
+            coresOverride: coresOverride,
+            gpuModeOverride: gpuModeOverride,
             diskSizeMB: diskSizeMB ?? runtimeProfile.diskSizeMB,
             rootEnabled: rootEnabled,
             adbEnabled: adbEnabled,
@@ -265,6 +280,18 @@ public struct InstanceConfiguration: Sendable, Hashable, Codable {
         ]
     }
 
+    public var resolvedMemoryMB: Int {
+        memoryMBOverride ?? runtimeProfile.memoryMB
+    }
+
+    public var resolvedCores: Int {
+        coresOverride ?? runtimeProfile.cores
+    }
+
+    public var resolvedGPUMode: String {
+        gpuModeOverride ?? runtimeProfile.gpuMode
+    }
+
     public var avdConfigSettings: [String: String] {
         var settings = runtimeProfile.avdConfigSettings
         settings["avd.id"] = avdName
@@ -274,12 +301,14 @@ public struct InstanceConfiguration: Sendable, Hashable, Codable {
         settings["hw.device.name"] = deviceSpec.modelCode
         settings["hw.gsmModem"] = "yes"
         settings["hw.initialOrientation"] = display.width >= display.height ? "landscape" : "portrait"
+        settings["hw.cpu.ncore"] = String(resolvedCores)
+        settings["hw.gpu.mode"] = resolvedGPUMode
         settings["hw.lcd.density"] = String(display.dpi)
         settings["hw.lcd.height"] = String(display.height)
         settings["hw.lcd.vsync"] = String(display.fps)
         settings["hw.lcd.width"] = String(display.width)
         settings["hw.mainKeys"] = "no"
-        settings["hw.ramSize"] = String(runtimeProfile.memoryMB)
+        settings["hw.ramSize"] = String(resolvedMemoryMB)
         settings["runtime.network.latency"] = "none"
         settings["runtime.network.speed"] = "full"
         return settings
@@ -295,7 +324,8 @@ public struct InstanceConfiguration: Sendable, Hashable, Codable {
             "persist.macos.virtual.imei": identity.imei,
             "persist.macos.virtual.imsi": identity.imsi,
             "persist.macos.virtual.android_id": identity.androidId,
-            "persist.macos.virtual.model_code": deviceSpec.modelCode
+            "persist.macos.virtual.model_code": deviceSpec.modelCode,
+            "qemu.sf.lcd_density": String(display.dpi)
         ]
     }
 }

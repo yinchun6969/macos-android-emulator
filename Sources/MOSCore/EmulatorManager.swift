@@ -122,9 +122,9 @@ public struct LaunchOptions: Sendable, Hashable {
     ) {
         self.init(
             headless: headless,
-            gpuMode: configuration.runtimeProfile.gpuMode,
-            memoryMB: configuration.runtimeProfile.memoryMB,
-            cores: configuration.runtimeProfile.cores,
+            gpuMode: configuration.resolvedGPUMode,
+            memoryMB: configuration.resolvedMemoryMB,
+            cores: configuration.resolvedCores,
             noSnapshotLoad: noSnapshotLoad,
             noSnapshotSave: true,
             noBootAnimation: true,

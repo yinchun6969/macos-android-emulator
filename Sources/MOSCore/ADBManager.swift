@@ -382,6 +382,15 @@ public final class ADBManager {
             .requireSuccess()
     }
 
+    public func waitForDevice(serial: String, timeout: TimeInterval = 30) throws {
+        guard let adb = sdk.adb else {
+            throw MOSError.toolNotFound("adb")
+        }
+        _ = try runner
+            .run(adb, arguments: ["-s", serial, "wait-for-device"], environment: sdk.toolEnvironment, input: nil, timeout: timeout)
+            .requireSuccess()
+    }
+
     public func remount(serial: String) throws {
         guard let adb = sdk.adb else {
             throw MOSError.toolNotFound("adb")
@@ -435,8 +444,17 @@ public final class ADBManager {
     }
 
     public func stabilizeNetwork(serial: String) throws {
+        _ = try? root(serial: serial)
+        _ = try? waitForDevice(serial: serial, timeout: 10)
         _ = try? shell(serial: serial, command: "settings put global airplane_mode_on 0")
         _ = try? shell(serial: serial, command: "am broadcast -a android.intent.action.AIRPLANE_MODE --ez state false")
+        _ = try? shell(serial: serial, command: "settings put global http_proxy :0")
+        _ = try? shell(serial: serial, command: "settings put global private_dns_mode off")
+        _ = try? shell(serial: serial, command: "settings delete global private_dns_specifier")
+        _ = try? shell(serial: serial, command: "ip -6 addr flush dev wlan0")
+        _ = try? shell(serial: serial, command: "ip -6 addr flush dev radio0")
+        _ = try? shell(serial: serial, command: "stop ipv6proxy")
+        _ = try? shell(serial: serial, command: "setprop persist.net.doxlat false")
         _ = try? shell(serial: serial, command: "svc wifi enable")
         _ = try? shell(serial: serial, command: "svc data enable")
     }

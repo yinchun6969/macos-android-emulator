@@ -91,8 +91,23 @@ com.u1game.cabalm
 
 - 手游优先使用 `game` 性能档位。
 - 如遇黑屏或 ANR，先关闭 Root，再冷启动：`set-config <name> --no-root --profile game --disk 51200`。
+- 如果游戏能进入但卡顿，优先尝试 `Host` GPU；如果 `Host` 进入 3D 场景黑屏，再切回 `Software` 兼容模式并把 FPS 降到 30 或 45。
+- 如果日志出现 `emuglGLESv2_enc` 的 vertex attribute 错误，通常是官方 Android Emulator 在 Apple Silicon 上的 GLES 翻译层兼容问题，不是 APK、磁盘或资源包缺失。
+- 新实例和已保存实例会独立保存内存、核心数和 GPU 模式，切换左侧实例时不会再共用同一套性能参数。
 - Android 15 会限制普通应用读取 IMEI/设备号；老游戏 SDK 如依赖这些接口，可尝试 Android 9/API 28 兼容镜像。
 - 部分广告、统计、一键登录域名解析失败不一定会阻止主游戏加载，需要以游戏主界面和日志综合判断。
+
+性能优先：
+
+```bash
+.build/debug/mosctl set-config macos_game_a9_01 --profile game --memory 3072 --cores 2 --gpu host --fps 60
+```
+
+兼容优先：
+
+```bash
+.build/debug/mosctl set-config macos_game_a9_01 --profile game --memory 3072 --cores 2 --gpu software --fps 45
+```
 
 ## 8. 点击器和宏脚本
 
@@ -154,10 +169,12 @@ mosctl install-apk auto /path/to/game.apk
 | lean | 1.5 GB | 2 | 128 MB | swiftshader |
 | balanced | 2 GB | 2 | 192 MB | auto |
 | performance | 3 GB | 3 | 256 MB | host |
-| game | 3 GB | 2 | 384 MB | host |
+| game | 3 GB | 2 | 512 MB | host |
 
 额外优化措施：
-- 禁用不需要的传感器（陀螺仪、加速度计、GPS 等）
-- LCD 色深降至 16-bit
+- 性能页的内存、核心数、GPU 模式按实例保存
+- `Host` GPU 性能最好，`Software` GPU 兼容性更高但会更卡
+- 保持 32-bit LCD 色深，避免部分 3D 游戏贴图和后处理异常
+- 保留陀螺仪、加速度计、GPS 等常用传感器，避免游戏 SDK 误判设备能力
 - 禁用音频输入输出
 - 禁用前后摄像头
