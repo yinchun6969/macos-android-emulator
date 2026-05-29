@@ -1635,10 +1635,10 @@ final class DashboardViewModel: ObservableObject {
     private func applyOrientation(packageName: String, serial: String, platform: MOSPlatform) throws {
         let isLandscape = autoOrientationEnabled && landscapePackages.contains(packageName)
         if isLandscape {
-            try platform.adbManager.setDisplay(serial: serial, width: 1280, height: 720, dpi: 240, rotation: 1)
+            try platform.adbManager.setAppOrientation(serial: serial, landscape: true)
             report("Landscape: \(packageName)", color: .green)
         } else {
-            try platform.adbManager.setDisplay(serial: serial, width: width, height: height, dpi: dpi, rotation: 0)
+            try platform.adbManager.setAppOrientation(serial: serial, landscape: false)
             report(packageName.isEmpty ? "Portrait" : "Portrait: \(packageName)", color: .green)
         }
     }

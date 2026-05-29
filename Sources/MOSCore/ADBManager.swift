@@ -192,6 +192,23 @@ public final class ADBManager {
         _ = try shell(serial: serial, command: "wm density \(dpi)")
     }
 
+    public func setAppOrientation(serial: String, landscape: Bool) throws {
+        _ = try? shell(serial: serial, command: "settings put secure show_rotation_suggestions 0")
+        // App-driven rotation must not leave a wm size override, or games can render a rotated portrait surface inside a landscape window.
+        _ = try? shell(serial: serial, command: "wm size reset")
+        _ = try? shell(serial: serial, command: "wm density reset")
+
+        if landscape {
+            _ = try? shell(serial: serial, command: "settings put system accelerometer_rotation 1")
+            _ = try? shell(serial: serial, command: "settings put system user_rotation 1")
+            try rotateHardware(serial: serial, landscape: true)
+        } else {
+            _ = try? shell(serial: serial, command: "settings put system accelerometer_rotation 0")
+            _ = try? shell(serial: serial, command: "settings put system user_rotation 0")
+            try rotateHardware(serial: serial, landscape: false)
+        }
+    }
+
     public func androidVersion(serial: String) throws -> String {
         let release = try shell(serial: serial, command: "getprop ro.build.version.release")
             .trimmingCharacters(in: .whitespacesAndNewlines)

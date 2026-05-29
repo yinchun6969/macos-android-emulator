@@ -580,16 +580,10 @@ func applyOrientation(_ args: [String]) throws {
         $0.orientation == .landscape && $0.packageName == packageName
     }
     if shouldLandscape {
-        try platform.adbManager.setDisplay(serial: serial, width: 1280, height: 720, dpi: 240, rotation: 1)
+        try platform.adbManager.setAppOrientation(serial: serial, landscape: true)
         print("Applied landscape for \(packageName).")
     } else {
-        try platform.adbManager.setDisplay(
-            serial: serial,
-            width: configuration.display.width,
-            height: configuration.display.height,
-            dpi: configuration.display.dpi,
-            rotation: 0
-        )
+        try platform.adbManager.setAppOrientation(serial: serial, landscape: false)
         print("Applied portrait for \(packageName.isEmpty ? "current app" : packageName).")
     }
 }

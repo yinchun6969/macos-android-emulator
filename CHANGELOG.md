@@ -8,6 +8,7 @@
 - Restored 32-bit LCD color depth and common sensors/GPS for better 3D game compatibility.
 - Network repair now clears guest proxy, Private DNS, IPv6 addresses, and `ipv6proxy` state to avoid VPN/IPv6 routing stalls for mainland game servers.
 - Game profile uses **3GB/2cores**, Host GPU, and **512MB** VM heap by default.
+- App auto-rotation now resets `wm size`/density overrides and lets the game Activity own the landscape surface, avoiding rotated portrait content inside a landscape emulator window.
 
 ## v0.2.0 - 2026-05-28
 
